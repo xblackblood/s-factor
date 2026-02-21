@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-Фактор: Где жить?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; }
+        
+        /* Цвета категорий */
+        .tier-Top10 { border-color: #8B5CF6; color: #5B21B6; background-color: #f5f3ff; } /* Violet */
+        .tier-A { border-color: #10B981; color: #047857; background-color: #ecfdf5; }     /* Emerald */
+        .tier-B { border-color: #3B82F6; color: #1d4ed8; background-color: #eff6ff; }     /* Blue */
+        .tier-C { border-color: #F59E0B; color: #b45309; background-color: #fffbeb; }     /* Amber */
+        .tier-D { border-color: #EF4444; color: #b91c1c; background-color: #fef2f2; }     /* Red */
+
+        /* Анимации */
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .country-pill { transition: all 0.2s; }
+        .country-pill:hover { transform: scale(1.02); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Hero Section & Search -->
+    <div class="bg-slate-900 text-white pt-16 pb-24 px-4 sm:px-6 lg:px-8 shadow-lg relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-4 tracking-tight">
+                <i class="fa-solid fa-earth-europe text-blue-400 mr-2"></i> Где жить?
+            </h1>
+            <p class="text-lg text-slate-300 mb-8 max-w-2xl mx-auto font-medium">
+                Оценка стран по <a href="#methodology" class="underline decoration-blue-400 hover:text-blue-400 transition-colors">S-фактору</a> — комплексному показателю, который включает в себя состояние экономики, уровень счастья, заработок, безопасность, медицину и другие аспекты благополучия.
+            </p>
+
+            <!-- Search Box -->
+            <div class="relative max-w-2xl mx-auto mb-4">
+                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass text-gray-400 text-xl"></i>
+                </div>
+                <input type="text" id="searchInput" 
+                    class="block w-full pl-14 pr-12 py-5 md:text-xl border-0 rounded-2xl shadow-2xl text-gray-900 focus:ring-4 focus:ring-blue-500 focus:outline-none transition-all placeholder-gray-400 font-medium" 
+                    placeholder="Введите название страны"
+                    autocomplete="off">
+                <div id="searchClear" class="absolute inset-y-0 right-0 pr-5 flex items-center cursor-pointer hidden">
+                    <i class="fa-solid fa-circle-xmark text-gray-300 hover:text-gray-500 text-2xl transition-colors"></i>
+                </div>
+            </div>
+            
+            <a href="#methodology" class="inline-block mt-4 text-sm text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-microscope mr-1"></i> Источник данных и методология
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 -mt-12 relative z-20 pb-16">
+        
+        <!-- Search Results -->
+        <div id="searchResult" class="hidden mb-12">
+            <!-- В карточку будут подставляться результаты через JavaScript -->
+        </div>
+
+        <!-- No Results Message -->
+        <div id="noResults" class="hidden text-center py-12 bg-white rounded-2xl shadow-lg border border-slate-200 mb-12">
+            <i class="fa-regular fa-face-frown text-5xl text-slate-300 mb-4"></i>
+            <h3 class="text-2xl font-bold text-slate-700">Страна не найдена</h3>
+            <p class="text-slate-500 mt-2 text-lg">Возможно, опечатка, или эта страна не участвовала в исследовании.</p>
+        </div>
+
+        <!-- Tier List View -->
+        <div id="tierListView" class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+            <h2 class="text-2xl font-bold text-slate-800 mb-8 flex items-center">
+                <i class="fa-solid fa-ranking-star mr-3 text-blue-500 text-3xl"></i> Полный рейтинг стран
+            </h2>
+            <div id="tiersContainer" class="space-y-8">
+                <!-- Категории будут сгенерированы скриптом -->
+            </div>
+        </div>
+        
+        <!-- Methodology Section -->
+        <div id="methodology" class="bg-slate-50 p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-sm scroll-mt-6">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-4">
+                <i class="fa-solid fa-microscope mr-2 text-indigo-500"></i> Об исследовании и методологии
+            </h2>
+            
+            <div class="space-y-6 text-slate-700 leading-relaxed">
+                
+                <!-- Источник -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-5 items-start">
+                    <div class="bg-indigo-100 text-indigo-600 p-3 rounded-xl shrink-0">
+                        <i class="fa-solid fa-book-bookmark text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-900 mb-1">Научный источник</h3>
+                        <p class="text-sm md:text-base">
+                            Сервис базируется на данных рецензируемого научного исследования: 
+                            <br><span class="font-medium text-slate-800 underline decoration-indigo-200">«The international general socioeconomic factor: Factor analyzing international rankings»</span>.
+                            <br><strong>Автор:</strong> Emil O. W. Kirkegaard. 
+                            <br><strong>Публикация:</strong> Open Differential Psychology, 2014 год.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Почему 2014 год актуален? -->
+                <div>
+                    <h3 class="font-bold text-lg text-slate-900 mb-2">Актуальны ли данные 2014 года?</h3>
+                    <p>Да. В исследовании математически доказано, что S-фактор имеет колоссальную корреляцию (0.86–0.87) с <strong>национальным интеллектом (National IQ)</strong>. В свою очередь, средний национальный интеллект — это показатель, который формируется десятилетиями и имеет глубокие предпосылки. Из-за этого он обладает крайне высокой инертностью и меняется очень медленно. Следовательно, фундаментальный показатель благополучия страны (S-фактор) также меняется крайне медленно. Лидеры 2014 года остаются лидерами и сегодня.</p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-lg text-slate-900 mb-2">Что такое S-Фактор?</h3>
+                    <p>S-фактор — это статистический показатель, объединяющий 96 различных метрик. Автор отмечает, что в политике нет единого консенсуса о том, что такое «идеально», поэтому математика в этом исследовании беспристрастна. Она выявляет общую компоненту успешности государства на основе реальных данных.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm">
+                    <h3 class="font-bold text-lg text-amber-800 mb-3 flex items-center">
+                        <i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> Парадоксы «плохих» показателей
+                    </h3>
+                    <p class="mb-3 italic text-slate-600">Из 96 переменных выявилось 4 парадокса — это субъективно «плохие» явления, которые математически жестко привязаны к самым успешным и развитым странам:</p>
+                    <ul class="list-disc pl-6 space-y-2 text-sm md:text-base">
+                        <li><strong>Ожирение:</strong> Имеет сильную положительную связь с успехом страны. Это означает пищевое изобилие и отсутствие проблемы голода.</li>
+                        <li><strong>Уровень самоубийств:</strong> Парадоксально, но также коррелирует с высоким развитием (чем развитее страна, тем выше шанс встретить этот показатель).</li>
+                        <li><strong>Смертность от загрязнения воздуха на улице:</strong> Побочный эффект индустриализации и обилия личного транспорта в богатых странах.</li>
+                        <li><strong>Высокий расход водных ресурсов:</strong> Указывает на развитую промышленность и высокий бытовой комфорт.</li>
+                    </ul>
+                    <p class="mt-4 font-medium text-slate-600 text-sm">Автор решил не вмешиваться в данные вручную и не «переворачивать» значения в угоду морали. Раз 92 из 96 метрик идеально совпадают со здравым смыслом, данные оставлены как есть.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-8 text-center text-slate-400 text-sm mt-auto">
+        <p>Основано на работе E. O. W. Kirkegaard (2014).</p>
+        <p class="mt-2 text-slate-500">S-factor: General Socioeconomic Factor.</p>
+    </footer>
+
+<script>
+    // База данных стран
+    const rawData = [
+        { score: 1.659, name: "Норвегия" }, { score: 1.635, name: "Финляндия" },
+        { score: 1.558, name: "Австралия" }, { score: 1.557, name: "Швеция" },
+        { score: 1.556, name: "Нидерланды" }, { score: 1.534, name: "Дания" },
+        { score: 1.513, name: "Швейцария" }, { score: 1.460, name: "Германия" },
+        { score: 1.440, name: "Канада" }, { score: 1.434, name: "США" },
+        { score: 1.432, name: "Исландия" }, { score: 1.430, name: "Новая Зеландия" },
+        { score: 1.399, name: "Ирландия" }, { score: 1.383, name: "Бельгия" },
+        { score: 1.377, name: "Великобритания" }, { score: 1.372, name: "Австрия" },
+        { score: 1.298, name: "Япония" }, { score: 1.277, name: "Франция" },
+        { score: 1.211, name: "Испания" }, { score: 1.146, name: "Южная Корея" },
+        { score: 1.125, name: "Словения" }, { score: 1.070, name: "Эстония" },
+        { score: 1.051, name: "Израиль" }, { score: 1.049, name: "Португалия" },
+        { score: 0.960, name: "Италия" }, { score: 0.956, name: "Чехия" },
+        { score: 0.924, name: "Сингапур" }, { score: 0.855, name: "Греция" },
+        { score: 0.837, name: "Польша" }, { score: 0.778, name: "Литва" },
+        { score: 0.770, name: "Венгрия" }, { score: 0.768, name: "Уругвай" },
+        { score: 0.754, name: "Чили" }, { score: 0.739, name: "ОАЭ" },
+        { score: 0.731, name: "Словакия" }, { score: 0.665, name: "Кувейт" },
+        { score: 0.644, name: "Аргентина" }, { score: 0.629, name: "Хорватия" },
+        { score: 0.628, name: "Кипр" }, { score: 0.626, name: "Коста-Рика" },
+        { score: 0.594, name: "Латвия" }, { score: 0.553, name: "Болгария" },
+        { score: 0.513, name: "Тринидад и Тобаго" }, { score: 0.412, name: "Маврикий" },
+        { score: 0.406, name: "Черногория" }, { score: 0.393, name: "Украина" },
+        { score: 0.388, name: "Панама" }, { score: 0.376, name: "Румыния" },
+        { score: 0.368, name: "Сербия" }, { score: 0.352, name: "Саудовская Аравия" },
+        { score: 0.320, name: "Беларусь" }, { score: 0.279, name: "Иордания" },
+        { score: 0.265, name: "Россия" }, { score: 0.263, name: "Малайзия" },
+        { score: 0.245, name: "Куба" }, { score: 0.219, name: "Казахстан" },
+        { score: 0.212, name: "Бразилия" }, { score: 0.199, name: "Ямайка" },
+        { score: 0.170, name: "Мексика" }, { score: 0.154, name: "Турция" },
+        { score: 0.140, name: "Северная Македония" }, { score: 0.102, name: "Перу" },
+        { score: 0.095, name: "Таиланд" }, { score: 0.086, name: "Молдова" },
+        { score: 0.071, name: "Ливан" }, { score: 0.066, name: "Босния и Герцеговина" },
+        { score: 0.043, name: "Колумбия" }, { score: 0.043, name: "Азербайджан" },
+        { score: 0.041, name: "Грузия" }, { score: 0.035, name: "Эквадор" },
+        { score: 0.007, name: "Албания" }, { score: 0.006, name: "Тунис" },
+        { score: -0.019, name: "Узбекистан" }, { score: -0.030, name: "Армения" },
+        { score: -0.052, name: "Сальвадор" }, { score: -0.072, name: "Алжир" },
+        { score: -0.089, name: "Венесуэла" }, { score: -0.106, name: "Монголия" },
+        { score: -0.114, name: "Доминиканская Республика" }, { score: -0.116, name: "Бахрейн" },
+        { score: -0.124, name: "Филиппины" }, { score: -0.125, name: "Иран" },
+        { score: -0.138, name: "Гайана" }, { score: -0.168, name: "ЮАР" },
+        { score: -0.185, name: "Шри-Ланка" }, { score: -0.247, name: "Никарагуа" },
+        { score: -0.248, name: "Китай" }, { score: -0.266, name: "Боливия" },
+        { score: -0.291, name: "Кыргызстан" }, { score: -0.292, name: "Парагвай" },
+        { score: -0.302, name: "Индонезия" }, { score: -0.333, name: "Египет" },
+        { score: -0.349, name: "Гондурас" }, { score: -0.368, name: "Марокко" },
+        { score: -0.377, name: "Ботсвана" }, { score: -0.402, name: "Гватемала" },
+        { score: -0.452, name: "Таджикистан" }, { score: -0.544, name: "Бутан" },
+        { score: -0.635, name: "Ливия" }, { score: -0.655, name: "Намибия" },
+        { score: -0.744, name: "Индия" }, { score: -0.756, name: "Непал" },
+        { score: -0.781, name: "Восточный Тимор" }, { score: -0.826, name: "Сирия" },
+        { score: -0.842, name: "Ирак" }, { score: -0.873, name: "Бангладеш" },
+        { score: -0.888, name: "Гана" }, { score: -0.933, name: "Эсватини" },
+        { score: -0.965, name: "Камбоджа" }, { score: -0.984, name: "Лаос" },
+        { score: -1.008, name: "Сенегал" }, { score: -1.040, name: "Папуа — Новая Гвинея" },
+        { score: -1.066, name: "Лесото" }, { score: -1.117, name: "Кения" },
+        { score: -1.134, name: "Джибути" }, { score: -1.147, name: "Руанда" },
+        { score: -1.200, name: "Замбия" }, { score: -1.235, name: "Бенин" },
+        { score: -1.272, name: "Гаити" }, { score: -1.282, name: "Танзания" },
+        { score: -1.283, name: "Либерия" }, { score: -1.288, name: "Республика Конго" },
+        { score: -1.345, name: "Пакистан" }, { score: -1.351, name: "Камерун" },
+        { score: -1.368, name: "Мадагаскар" }, { score: -1.376, name: "Уганда" },
+        { score: -1.411, name: "Того" }, { score: -1.412, name: "Мали" },
+        { score: -1.432, name: "Малави" }, { score: -1.485, name: "Судан" },
+        { score: -1.501, name: "Йемен" }, { score: -1.515, name: "Нигерия" },
+        { score: -1.560, name: "Мозамбик" }, { score: -1.579, name: "Мавритания" },
+        { score: -1.602, name: "Буркина-Фасо" }, { score: -1.647, name: "Ангола" },
+        { score: -1.736, name: "Сьерра-Леоне" }, { score: -1.753, name: "Нигер" },
+        { score: -1.866, name: "Гвинея" }, { score: -1.943, name: "Бурунди" },
+        { score: -2.299, name: "ЦАР" }, { score: -2.347, name: "Чад" }
+    ];
+
+    // Сортировка по убыванию
+    const sortedData = [...rawData].sort((a, b) => b.score - a.score);
+
+    // Конфигурация категорий
+    const tiers = [
+        { 
+            id: 'Top10', name: 'Превосходно (Топ-10)', icon: 'fa-trophy', colorClass: 'tier-Top10', 
+            verdict: "Абсолютная мировая элита! Эти страны входят в десятку лучших в мире с высочайшим качеством жизни, медициной и безопасностью."
+        },
+        { 
+            id: 'A', name: 'Отлично (S > 1.0)', icon: 'fa-star', colorClass: 'tier-A', 
+            verdict: "Безусловные мировые лидеры. Отличное качество жизни, мощные институты и высокая безопасность."
+        },
+        { 
+            id: 'B', name: 'Хорошо (от 0.0 до 1.0)', icon: 'fa-check-double', colorClass: 'tier-B', 
+            verdict: "Страна находится выше среднего мирового уровня. Здесь жить достаточно комфортно, это развитая или крепкая развивающаяся экономика."
+        },
+        { 
+            id: 'C', name: 'Терпимо (от -1.0 до 0.0)', icon: 'fa-scale-balanced', colorClass: 'tier-C', 
+            verdict: "Показатели ниже мирового среднего. Могут быть быстрорастущие экономики, но в среднем по стране сохраняется много проблем с бедностью или безопасностью."
+        },
+        { 
+            id: 'D', name: 'Плохо (S < -1.0)', icon: 'fa-triangle-exclamation', colorClass: 'tier-D', 
+            verdict: "Страна с тяжелой гуманитарной ситуацией, низким качеством институтов. Крайне неблагоприятно для переезда."
+        }
+    ];
+
+    // Обработка данных
+    const processedData = sortedData.map((country, index) => {
+        let tierInfo;
+        if (index < 10) tierInfo = tiers.find(t => t.id === 'Top10');
+        else if (country.score > 1.0) tierInfo = tiers.find(t => t.id === 'A');
+        else if (country.score > 0.0) tierInfo = tiers.find(t => t.id === 'B');
+        else if (country.score >= -1.0) tierInfo = tiers.find(t => t.id === 'C');
+        else tierInfo = tiers.find(t => t.id === 'D');
+        
+        return { ...country, tier: tierInfo, rank: index + 1 };
+    });
+
+    // Функция отрисовки списка
+    function renderTierList() {
+        const container = document.getElementById('tiersContainer');
+        container.innerHTML = '';
+
+        tiers.forEach(tier => {
+            const countriesInTier = processedData.filter(c => c.tier.id === tier.id);
+            if(countriesInTier.length === 0) return;
+
+            const html = `
+                <div class="rounded-2xl overflow-hidden border border-slate-200">
+                    <div class="px-6 py-4 ${tier.colorClass} border-b border-opacity-20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid ${tier.icon} text-2xl"></i>
+                            <h3 class="text-xl font-bold">${tier.name}</h3>
+                        </div>
+                        <span class="text-sm font-semibold opacity-80 bg-white/50 px-3 py-1 rounded-full">${countriesInTier.length} стран</span>
+                    </div>
+                    <div class="p-5 flex flex-wrap gap-2 bg-slate-50/50">
+                        ${countriesInTier.map(c => `
+                            <div class="country-pill bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-3 cursor-default">
+                                ${tier.id === 'Top10' ? `<span class="text-xs font-bold text-violet-400">#${c.rank}</span>` : ''}
+                                <span class="font-semibold text-slate-700">${c.name}</span>
+                                <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">${c.score.toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+    }
+
+    // Поиск и отображение результата
+    function renderSearchResult(countries) {
+        const resultContainer = document.getElementById('searchResult');
+        const listContainer = document.getElementById('tierListView');
+        const noResults = document.getElementById('noResults');
+
+        if (countries.length === 0) {
+            resultContainer.classList.add('hidden');
+            listContainer.classList.add('hidden');
+            noResults.classList.remove('hidden');
+            return;
+        }
+
+        const country = countries[0];
+        const t = country.tier;
+
+        const resultHtml = `
+            <div class="bg-white rounded-3xl shadow-xl border-l-[12px] ${t.colorClass} p-8 fade-in relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 opacity-5">
+                    <i class="fa-solid ${t.icon} text-[200px]"></i>
+                </div>
+                
+                <div class="flex flex-col md:flex-row gap-8 items-start justify-between relative z-10">
+                    <div class="flex-1">
+                        <div class="flex flex-wrap items-center gap-4 mb-4">
+                            <h2 class="text-4xl font-extrabold text-slate-900">${country.name}</h2>
+                            <span class="px-4 py-1.5 rounded-full text-sm font-bold ${t.colorClass} border uppercase tracking-widest shadow-sm">
+                                <i class="fa-solid ${t.icon} mr-1.5"></i> ${t.name.split(' ')[0]}
+                            </span>
+                            ${country.rank <= 10 ? `<span class="px-3 py-1.5 rounded-full text-sm font-bold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"><i class="fa-solid fa-medal mr-1"></i> ${country.rank} место в мире</span>` : ''}
+                        </div>
+                        <p class="text-xl text-slate-600 mt-2 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            ${t.verdict}
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 text-center min-w-[200px] shadow-sm shrink-0">
+                        <div class="text-sm text-slate-400 font-bold uppercase tracking-widest mb-2">Оценка S-Фактора</div>
+                        <div class="text-6xl font-black text-slate-800 tracking-tighter">${country.score > 0 ? '+' : ''}${country.score.toFixed(2)}</div>
+                        <div class="text-xs text-slate-400 mt-3 font-medium italic">Мировой индекс успеха</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        resultContainer.innerHTML = resultHtml;
+        resultContainer.classList.remove('hidden');
+        listContainer.classList.add('hidden');
+        noResults.classList.add('hidden');
+    }
+
+    // Слушатели поиска
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim().toLowerCase();
+        
+        if (query.length > 0) {
+            searchClear.classList.remove('hidden');
+            const matches = processedData.filter(c => c.name.toLowerCase().includes(query))
+                                         .sort((a, b) => {
+                                             const aStarts = a.name.toLowerCase().startsWith(query);
+                                             const bStarts = b.name.toLowerCase().startsWith(query);
+                                             if(aStarts && !bStarts) return -1;
+                                             if(!aStarts && bStarts) return 1;
+                                             return 0;
+                                         });
+            renderSearchResult(matches);
+        } else {
+            searchClear.classList.add('hidden');
+            document.getElementById('searchResult').classList.add('hidden');
+            document.getElementById('noResults').classList.add('hidden');
+            document.getElementById('tierListView').classList.remove('hidden');
+        }
+    });
+
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+        searchInput.focus();
+    });
+
+    // Инициализация
+    renderTierList();
+
+</script>
+</body>
+</html>
